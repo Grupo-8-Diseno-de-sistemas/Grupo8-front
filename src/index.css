@@ -1,0 +1,25 @@
+/**
+ * Estilos globales.
+ *
+ * Tailwind v4 cambia la sintaxis: ya no se usan las directivas @tailwind,
+ * ahora se importa tailwindcss directamente con @import.
+ *
+ * Este archivo es el mínimo necesario para que Tailwind funcione.
+ * Todos los estilos específicos se definen inline con clases utilitarias.
+ */
+
+@import 'tailwindcss';
+
+/* Respeta la preferencia del usuario de reducir movimiento.
+   Desactiva animaciones como el pulse de los skeletons cuando
+   el sistema operativo tiene activada la opción de reducir movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

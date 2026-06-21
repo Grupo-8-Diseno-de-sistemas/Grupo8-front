@@ -1,0 +1,378 @@
+openapi: 3.0.3
+info:
+  title: PPAI Bolsines API
+  version: 1.0.0
+  description: API del CU 28 - Registrar recepción de bolsín
+  contact:
+    name: Grupo 8 - DSI 2026
+
+servers:
+  - url: http://localhost:8080/api
+    description: Desarrollo local
+
+paths:
+  /usuarios/login:
+    post:
+      summary: Iniciar sesión
+      tags: [Usuarios]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombreUsuario:
+                  type: string
+                  example: "egallardo"
+                contrasenia:
+                  type: string
+                  example: "123456"
+              required: [nombreUsuario, contrasenia]
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  usuario:
+                    $ref: '#/components/schemas/Usuario'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /usuarios/{id}:
+    get:
+      summary: Obtener usuario por ID
+      tags: [Usuarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '404':
+          description: Usuario no encontrado
+
+  /comisiones:
+    get:
+      summary: Listar todas las comisiones médicas
+      tags: [Comisiones]
+      responses:
+        '200':
+          description: Lista de comisiones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comision'
+
+  /bolsines:
+    get:
+      summary: Buscar bolsines según filtros
+      tags: [Bolsines]
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Enviado"
+          description: Filtrar por estado del bolsín
+        - name: cmDestino
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: ID de la CM destino (del usuario logueado)
+        - name: precinto
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtrar por número de precinto (opcional)
+        - name: cmOrigen
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filtrar por ID de CM origen (opcional)
+      responses:
+        '200':
+          description: Lista de bolsines encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bolsin'
+        '404':
+          description: |
+            A1 - No se encuentra bolsín con el número de precinto ingresado
+            A2 - No se encuentra bolsín con la CM de origen ingresada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bolsines/{id}:
+    get:
+      summary: Obtener detalle completo de un bolsín
+      tags: [Bolsines]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalle del bolsín con remitos y documentación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BolsinDetalle'
+        '404':
+          description: Bolsín no encontrado
+
+  /bolsines/{id}/recepcion:
+    put:
+      summary: Registrar la recepción de un bolsín
+      tags: [Bolsines]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrarRecepcionRequest'
+      responses:
+        '200':
+          description: Recepción registrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionResponse'
+        '400':
+          description: Error en la solicitud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombreUsuario:
+          type: string
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        cm:
+          $ref: '#/components/schemas/Comision'
+      required:
+        - id
+        - nombreUsuario
+        - nombre
+        - apellido
+        - email
+        - cm
+
+    Empleado:
+      allOf:
+        - $ref: '#/components/schemas/Usuario'
+        - type: object
+          properties:
+            perfiles:
+              type: array
+              items:
+                type: string
+
+    Comision:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          example: "Comisión Médica Córdoba"
+        codigo:
+          type: string
+          example: "CMJ-CBA"
+        tipo:
+          type: string
+          enum: [CMC, CMJ]
+      required:
+        - id
+        - nombre
+        - codigo
+        - tipo
+
+    Bolsin:
+      type: object
+      properties:
+        id:
+          type: integer
+        nroPrecinto:
+          type: string
+          example: "PREC-001-2026"
+        fechaEnvio:
+          type: string
+          format: date
+          example: "2026-06-15"
+        peso:
+          type: number
+          format: float
+          example: 350.50
+        cmOrigen:
+          $ref: '#/components/schemas/Comision'
+        cmDestino:
+          $ref: '#/components/schemas/Comision'
+        estadoActual:
+          type: string
+          example: "Enviado"
+      required:
+        - id
+        - nroPrecinto
+        - fechaEnvio
+        - cmOrigen
+        - cmDestino
+        - estadoActual
+
+    BolsinDetalle:
+      allOf:
+        - $ref: '#/components/schemas/Bolsin'
+        - type: object
+          properties:
+            remitos:
+              type: array
+              items:
+                $ref: '#/components/schemas/Remito'
+            cambiosEstado:
+              type: array
+              items:
+                $ref: '#/components/schemas/CambioEstado'
+
+    Remito:
+      type: object
+      properties:
+        id:
+          type: integer
+        nroRemito:
+          type: string
+          example: "REM-001-2026"
+        fechaEmision:
+          type: string
+          format: date
+        estadoActual:
+          type: string
+          example: "Enviado"
+        documentacion:
+          type: array
+          items:
+            $ref: '#/components/schemas/Documentacion'
+      required:
+        - id
+        - nroRemito
+        - estadoActual
+        - documentacion
+
+    Documentacion:
+      type: object
+      properties:
+        id:
+          type: integer
+        asunto:
+          type: string
+          example: "Dictamen médico N° 1234"
+        tipoDocumento:
+          type: string
+          example: "Dictamen"
+        fechaPase:
+          type: string
+          format: date
+        estadoActual:
+          type: string
+          example: "En Bolsín Saliente"
+      required:
+        - id
+        - asunto
+        - tipoDocumento
+        - estadoActual
+
+    CambioEstado:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date-time
+        estado:
+          type: string
+        empleadoResponsable:
+          type: string
+          description: Nombre completo del empleado que realizó el cambio
+
+    RegistrarRecepcionRequest:
+      type: object
+      properties:
+        opcion:
+          type: integer
+          enum: [1, 2, 3, 4]
+          description: |
+            1 = El contenido del bolsín es igual al registrado
+            2 = No se recibe toda la documentación asociada a los remitos
+            3 = Existe documentación que no corresponde al destino
+            4 = La documentación se debe redirigir a otra área
+        empleadoId:
+          type: integer
+      required:
+        - opcion
+        - empleadoId
+
+    RecepcionResponse:
+      type: object
+      properties:
+        exito:
+          type: boolean
+        mensaje:
+          type: string
+        bolsin:
+          $ref: '#/components/schemas/BolsinDetalle'
+
+    ErrorResponse:
+      type: object
+      properties:
+        exito:
+          type: boolean
+          default: false
+        mensaje:
+          type: string
+        codigo:
+          type: string
