@@ -1,13 +1,12 @@
 /**
  * Punto de entrada único para las llamadas a la API.
  *
- * Conectado al backend real vía axios (antes usaba mocks). El proxy de
- * vite.config.ts redirige /api a http://localhost:8080, así que acá
- * alcanza con pedir rutas relativas.
+ * Conectado al backend real vía axios. El proxy de vite.config.ts redirige
+ * /api a http://localhost:8080, así que acá alcanza con pedir rutas relativas.
  *
- * El interceptor de errores re-lanza directamente el body de la respuesta
- * (ErrorResponse: { exito, mensaje, codigo }) para que las pantallas sigan
- * funcionando igual que con los mocks (err?.mensaje).
+ * El interceptor de errores re-lanza el body de la respuesta
+ * (ErrorResponse: { exito, mensaje, codigo }) para que las pantallas muestren
+ * err?.mensaje en caso de falla.
  */
 
 import axios from 'axios'

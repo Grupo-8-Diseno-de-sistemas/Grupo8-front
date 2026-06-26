@@ -61,7 +61,7 @@ export function LoginPage() {
           </div>
           <CardTitle className="text-xl">PPAI Bolsines</CardTitle>
           <CardDescription>
-            CU 28 - Registrar recepción de bolsín
+            Sistema de Gestión de Bolsines
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -102,11 +102,6 @@ export function LoginPage() {
               {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>
           </form>
-
-          {/* Aviso para que el usuario de pruebas sepa que no necesita credenciales reales */}
-          <p className="mt-4 text-center text-xs text-stone-400">
-            Mock: cualquier usuario/contraseña funciona
-          </p>
         </CardContent>
       </Card>
     </div>

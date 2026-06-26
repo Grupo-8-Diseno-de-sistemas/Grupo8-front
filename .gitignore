@@ -2,8 +2,12 @@ node_modules
 dist
 dev-dist
 *.local
+
+# Environment variables
 .env
 .env.*
+!.env.example
+
 .DS_Store
 *.tsbuildinfo
 .atl/

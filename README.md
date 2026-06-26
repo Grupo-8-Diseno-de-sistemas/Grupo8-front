@@ -2,7 +2,7 @@
 
 Frontend del **Caso de Uso 28** del TPI de Diseño de Sistemas Informáticos 2026,
 Grupo 8. Implementa el registro de recepción de bolsines entre comisiones médicas.
-
+**Conectado al backend real**
 ### Stack
 
 - **Vite 6** + React 19 + TypeScript
@@ -10,22 +10,21 @@ Grupo 8. Implementa el registro de recepción de bolsines entre comisiones médi
 - **Shadcn/ui** (componentes copiados: Card, Button, Input, Badge, etc.)
 - **Zustand** para estado global (autenticación)
 - **React Router v7** para navegación
-- **Axios** (preparado, actualmente usa mock)
+- **Axios** para comunicación con el backend
 
 ### Estructura del proyecto
 
 ```
 src/
-├── api/             # Servicios mock + adapter para backend real
-│   └── mock/        # Datos y lógica mock (data.ts, mockService.ts)
+├── api/               # Servicio real con Axios (service.ts)
 ├── components/
-│   ├── layout/      # Header, Layout, AuthGuard
-│   └── ui/          # Componentes Shadcn/ui (Card, Button, Input, etc.)
-├── hooks/           # (preparado para custom hooks)
-├── lib/             # Utilidades: cn() para clases Tailwind
-├── pages/           # LoginPage, BuscarBolsinPage, DetalleBolsinPage
-├── store/           # Zustand: authStore (token, usuario, login/logout)
-└── types/           # Interfaces del dominio y constantes (OPCIONES_RECEPCION)
+│   ├── layout/        # Header, Layout, AuthGuard
+│   └── ui/            # Componentes Shadcn/ui (Card, Button, Input, etc.)
+├── hooks/              # Custom hooks
+├── lib/               # Utilidades: cn() para clases Tailwind
+├── pages/             # LoginPage, BuscarBolsinPage, DetalleBolsinPage
+├── store/             # Zustand: authStore (token, usuario, login/logout)
+└── types/            # Interfaces del dominio y constantes (OPCIONES_RECEPCION)
 ```
 
 ### Cómo correrlo
@@ -37,12 +36,40 @@ npm run build       # Build producción en dist/
 npm run preview     # Servir build localmente
 ```
 
-### Mock
+### Conexión con el backend
 
-Actualmente todo funciona con datos mock en `src/api/mock/`. Cuando el backend
-esté listo, se reemplazan las funciones en `src/api/service.ts` por llamadas
-axios. El proxy de Vite ya está configurado para redirigir `/api` a
-`http://localhost:8080`.
+El frontend se conecta al backend via **Vite proxy** (`vite.config.ts`):
+
+| Ruta | Proxy destino | Descripción |
+|------|--------------|-------------|
+| `/api` | `${VITE_API_URL}` → default `http://localhost:8080` | API del backend |
+
+El proxy usa `process.env.VITE_API_URL` (ver `.env.example`).
+
+### Variables de entorno
+
+```bash
+# .env.example (template — copiar a .env)
+VITE_API_URL=http://localhost:8080
+
+# Si el backend corre en otro puerto, ajustar:
+VITE_API_URL=http://localhost:3000
+```
+
+### Requisitos del entorno
+
+- **Backend** Spring Boot corriendo en la URL de `VITE_API_URL` (default: `http://localhost:8080`)
+- **PostgreSQL** en `localhost:5432` (usuario: `postgres`, contraseña: `postgres`)
+- Datos de prueba en `Grupo8-back/sql/seed-data.sql`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/usuarios/login` | Login con `{nombreUsuario, contrasenia}` |
+| `GET` | `/api/usuarios/{id}` | Datos del usuario |
+| `GET` | `/api/comisiones` | Listar comisiones médicas |
+| `GET` | `/api/bolsines?cmDestino=X` | Bolsines pendientes en CM destino |
+| `GET` | `/api/bolsines/{id}` | Detalle de un bolsín con remitos y documentación |
+| `PUT` | `/api/bolsines/{id}/recepcion` | Registrar recepción de bolsín |
 
 ### CU 28 — Flujo cubierto
 
@@ -74,3 +101,14 @@ axios. El proxy de Vite ya está configurado para redirigir `/api` a
 ### Contrato API
 
 `docs/openapi.yaml` — OpenAPI 3.0 con todos los endpoints y schemas del CU 28.
+
+### Gestión de estados
+
+El frontend usa **Zustand** (`src/store/authStore.ts`) para mantener:
+
+- `token` — ID de sesión devuelto por el backend
+- `usuario` — datos del usuario logueado
+- `login()` — hace POST a `/api/usuarios/login`
+- `logout()` — limpia el estado
+
+El store persiste en `sessionStorage` para mantener la sesión entre recargas de la SPA.
