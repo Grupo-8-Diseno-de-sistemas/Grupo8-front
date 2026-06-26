@@ -48,7 +48,7 @@ import {
 export function DetalleBolsinPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { usuario } = useAuthStore()
+  const { usuario, token } = useAuthStore()
 
   // ─── Estados del componente ───
   const [bolsin, setBolsin] = useState<BolsinDetalle | null>(null)
@@ -103,13 +103,13 @@ export function DetalleBolsinPage() {
 
   // ─── El usuario confirma y se registra la recepción ───
   const handleConfirmar = async () => {
-    if (!bolsin || !usuario) return
+    if (!bolsin || !usuario || !token) return
     setRegistrando(true)
 
     try {
       const response = await registrarRecepcion(bolsin.id, {
         opcion: Number(opcionSeleccionada) as 1 | 2 | 3 | 4,
-        empleadoId: usuario.id,
+        sesionId: Number(token),
       })
 
       // Actualizamos el bolsín con los nuevos estados devueltos por el backend

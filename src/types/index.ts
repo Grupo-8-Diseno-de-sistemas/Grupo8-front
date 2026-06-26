@@ -98,11 +98,11 @@ export interface BolsinDetalle extends Bolsin {
 /**
  * Cuerpo de la request para registrar la recepción.
  * La opción indica qué situación se dio al recibir el bolsín (1 a 4),
- * y el empleadoId es quién está haciendo el registro.
+ * y el sesionId identifica la sesión activa del usuario logueado.
  */
 export interface RegistrarRecepcionRequest {
   opcion: 1 | 2 | 3 | 4
-  empleadoId: number
+  sesionId: number
 }
 
 /**
@@ -137,10 +137,7 @@ export interface LoginResponse {
  * para la CM del usuario). precinto y cmOrigen son filtros opcionales.
  */
 export interface BolsinFilterParams {
-  estado: string
-  cmDestino: number
-  precinto?: string
-  cmOrigen?: number
+  sesionId: number
 }
 
 /**
