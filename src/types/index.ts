@@ -138,6 +138,8 @@ export interface LoginResponse {
  */
 export interface BolsinFilterParams {
   sesionId: number
+  nroPrecinto?: string
+  cmOrigenId?: number
 }
 
 /**

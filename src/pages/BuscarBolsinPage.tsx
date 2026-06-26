@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { getBolsines, getComisiones } from '@/api/service'
@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Search, AlertCircle, Package, Filter } from 'lucide-react'
+import { Search, AlertCircle, Package, Filter, X } from 'lucide-react'
 import type { Bolsin, Comision } from '@/types'
 
 export function BuscarBolsinPage() {
@@ -25,15 +25,36 @@ export function BuscarBolsinPage() {
   const [comisiones, setComisiones] = useState<Comision[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [errorA1, setErrorA1] = useState('')
 
-  const [precintoFilter, setPrecintoFilter] = useState('')
-  const [cmOrigenFilter, setCmOrigenFilter] = useState('')
+  const [precintoInput, setPrecintoInput] = useState('')
+  const [cmOrigenId, setCmOrigenId] = useState('')
+
+  const fetchBolsines = (nroPrecinto?: string, cmOrigen?: number) => {
+    if (!token) return Promise.resolve()
+    setLoading(true)
+    setError('')
+    setErrorA1('')
+
+    return getBolsines({
+      sesionId: Number(token),
+      ...(nroPrecinto ? { nroPrecinto } : {}),
+      ...(cmOrigen ? { cmOrigenId: cmOrigen } : {}),
+    })
+      .then((bolsines) => setTodosLosBolsines(bolsines))
+      .catch((err: any) => {
+        if (err?.status === 404) {
+          setErrorA1(err?.message || err?.detail || err?.mensaje || 'No se encontró el bolsín ingresado.')
+          setTodosLosBolsines([])
+        } else {
+          setError(err?.mensaje || err?.message || 'Error al cargar los bolsines')
+        }
+      })
+      .finally(() => setLoading(false))
+  }
 
   useEffect(() => {
     if (!token) return
-    setLoading(true)
-    setError('')
-
     Promise.all([
       getBolsines({ sesionId: Number(token) }),
       getComisiones(),
@@ -43,26 +64,21 @@ export function BuscarBolsinPage() {
         setComisiones(cms)
       })
       .catch((err: any) => {
-        setError(err?.mensaje || 'Error al cargar los bolsines')
+        setError(err?.mensaje || err?.message || 'Error al cargar los bolsines')
       })
       .finally(() => setLoading(false))
   }, [token])
 
-  const bolsinesFiltrados = useMemo(() => {
-    return todosLosBolsines.filter((b) => {
-      const matchPrecinto =
-        !precintoFilter.trim() ||
-        b.nroPrecinto.toLowerCase().includes(precintoFilter.trim().toLowerCase())
-      const matchCmOrigen =
-        !cmOrigenFilter || cmOrigenFilter === 'todas' ||
-        String(b.cmOrigen.id) === cmOrigenFilter
-      return matchPrecinto && matchCmOrigen
-    })
-  }, [todosLosBolsines, precintoFilter, cmOrigenFilter])
+  const handleBuscar = () => {
+    const precinto = precintoInput.trim() || undefined
+    const cmOrigen = cmOrigenId && cmOrigenId !== 'todas' ? Number(cmOrigenId) : undefined
+    fetchBolsines(precinto, cmOrigen)
+  }
 
   const handleLimpiar = () => {
-    setPrecintoFilter('')
-    setCmOrigenFilter('')
+    setPrecintoInput('')
+    setCmOrigenId('')
+    fetchBolsines()
   }
 
   return (
@@ -97,8 +113,9 @@ export function BuscarBolsinPage() {
                 id="filter-precinto"
                 autoComplete="off"
                 placeholder="Ej: PREC-001-2026"
-                value={precintoFilter}
-                onChange={(e) => setPrecintoFilter(e.target.value)}
+                value={precintoInput}
+                onChange={(e) => setPrecintoInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
               />
             </div>
             <div className="flex-1 space-y-1.5">
@@ -106,8 +123,8 @@ export function BuscarBolsinPage() {
               <select
                 id="filter-cm-origen"
                 className="flex h-9 w-full rounded-md border border-stone-200 bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
-                value={cmOrigenFilter}
-                onChange={(e) => setCmOrigenFilter(e.target.value)}
+                value={cmOrigenId}
+                onChange={(e) => setCmOrigenId(e.target.value)}
               >
                 <option value="todas">Todas las CM</option>
                 {comisiones
@@ -119,8 +136,12 @@ export function BuscarBolsinPage() {
                   ))}
               </select>
             </div>
-            <Button variant="outline" onClick={handleLimpiar} disabled={loading}>
+            <Button onClick={handleBuscar} disabled={loading}>
               <Search className="h-4 w-4" />
+              Buscar
+            </Button>
+            <Button variant="outline" onClick={handleLimpiar} disabled={loading}>
+              <X className="h-4 w-4" />
               Limpiar
             </Button>
           </div>
@@ -136,11 +157,18 @@ export function BuscarBolsinPage() {
               variant="outline"
               size="sm"
               className="mt-2"
-              onClick={() => window.location.reload()}
+              onClick={() => fetchBolsines()}
             >
               Reintentar
             </Button>
           </div>
+        </div>
+      )}
+
+      {errorA1 && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <p className="font-medium text-amber-800">{errorA1}</p>
         </div>
       )}
 
@@ -152,7 +180,7 @@ export function BuscarBolsinPage() {
         </div>
       )}
 
-      {!loading && !error && bolsinesFiltrados.length === 0 && (
+      {!loading && !error && !errorA1 && todosLosBolsines.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center py-12">
             <Package className="mb-4 h-12 w-12 text-stone-300" />
@@ -167,14 +195,14 @@ export function BuscarBolsinPage() {
         </Card>
       )}
 
-      {!loading && !error && bolsinesFiltrados.length > 0 && (
+      {!loading && !error && !errorA1 && todosLosBolsines.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm text-stone-500">
             Se encontraron{' '}
-            <span className="font-medium">{bolsinesFiltrados.length}</span>{' '}
+            <span className="font-medium">{todosLosBolsines.length}</span>{' '}
             bolsín(es) pendiente(s) de recepción
           </p>
-          {bolsinesFiltrados.map((bolsin) => (
+          {todosLosBolsines.map((bolsin) => (
             <Card
               key={bolsin.id}
               className="cursor-pointer transition-colors hover:border-stone-400"
