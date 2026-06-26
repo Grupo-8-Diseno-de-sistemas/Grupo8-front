@@ -237,7 +237,7 @@ export function DetalleBolsinPage() {
               </p>
             </div>
             <Badge variant={resultado?.exito ? 'success' : 'warning'}>
-              {resultado?.exito ? 'Recibido' : bolsin.estadoActual}
+              {bolsin.estadoActual}
             </Badge>
           </div>
         </CardHeader>
@@ -292,6 +292,66 @@ export function DetalleBolsinPage() {
         </CardContent>
       </Card>
 
+      {/* ─── Estado final de remitos y documentación (post-registro) ─── */}
+      {resultado?.exito && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-stone-500" />
+              <CardTitle className="text-sm">Estado final de remitos y documentación</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {bolsin.remitos.map((remito) => (
+              <div key={remito.id} className="rounded-lg border border-stone-200">
+                <div className="flex items-center justify-between border-b border-stone-100 bg-stone-50 px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-stone-500" />
+                    <span className="text-sm font-medium">{remito.nroRemito}</span>
+                  </div>
+                  <Badge variant={
+                    remito.estadoActual === 'Enviado'
+                      ? 'warning'
+                      : remito.estadoActual === 'Recibido y Aceptado Parcial'
+                        ? 'warning'
+                        : 'success'
+                  }>
+                    {remito.estadoActual}
+                  </Badge>
+                </div>
+                <div className="divide-y divide-stone-100">
+                  {remito.documentacion.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between px-4 py-2.5">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-stone-900">{doc.asunto}</p>
+                        <p className="text-xs text-stone-500">{doc.tipoDocumento}</p>
+                      </div>
+                      <Badge
+                        variant={
+                          doc.estadoActual === 'En Bolsín Enviado'
+                            ? 'secondary'
+                            : doc.estadoActual === 'Recibida y Aceptada'
+                              ? 'success'
+                              : doc.estadoActual === 'No Recibida'
+                                ? 'destructive'
+                                : doc.estadoActual === 'Recibida y Rechazada'
+                                  ? 'destructive'
+                                  : doc.estadoActual === 'Para Redirigir'
+                                    ? 'warning'
+                                    : 'outline'
+                        }
+                      >
+                        {doc.estadoActual}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* ─── Remitos y Documentación ───
            Se oculta después de un registro exitoso porque los datos ya
            cambiaron y no tendría sentido mostrar las opciones de nuevo. */}
@@ -312,7 +372,13 @@ export function DetalleBolsinPage() {
                     <FileText className="h-4 w-4 text-stone-500" />
                     <span className="text-sm font-medium">{remito.nroRemito}</span>
                   </div>
-                  <Badge variant={remito.estadoActual === 'Enviado' ? 'warning' : 'success'}>
+                  <Badge variant={
+                    remito.estadoActual === 'Enviado'
+                      ? 'warning'
+                      : remito.estadoActual === 'Recibido y Aceptado Parcial'
+                        ? 'warning'
+                        : 'success'
+                  }>
                     {remito.estadoActual}
                   </Badge>
                 </div>
@@ -326,13 +392,17 @@ export function DetalleBolsinPage() {
                       </div>
                       <Badge
                         variant={
-                          doc.estadoActual === 'En Bolsín Saliente'
+                          doc.estadoActual === 'En Bolsín Enviado'
                             ? 'secondary'
                             : doc.estadoActual === 'Recibida y Aceptada'
                               ? 'success'
                               : doc.estadoActual === 'No Recibida'
                                 ? 'destructive'
-                                : 'outline'
+                                : doc.estadoActual === 'Recibida y Rechazada'
+                                  ? 'destructive'
+                                  : doc.estadoActual === 'Para Redirigir'
+                                    ? 'warning'
+                                    : 'outline'
                         }
                       >
                         {doc.estadoActual}
