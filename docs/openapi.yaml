@@ -87,26 +87,19 @@ paths:
       summary: Buscar bolsines según filtros
       tags: [Bolsines]
       parameters:
-        - name: estado
-          in: query
-          required: false
-          schema:
-            type: string
-            example: "Enviado"
-          description: Filtrar por estado del bolsín
-        - name: cmDestino
+        - name: sesionId
           in: query
           required: true
           schema:
             type: integer
-          description: ID de la CM destino (del usuario logueado)
-        - name: precinto
+          description: ID de la sesión activa (determina la CM destino del usuario)
+        - name: nroPrecinto
           in: query
           required: false
           schema:
             type: string
           description: Filtrar por número de precinto (opcional)
-        - name: cmOrigen
+        - name: cmOrigenId
           in: query
           required: false
           schema:
@@ -226,14 +219,10 @@ components:
         codigo:
           type: string
           example: "CMJ-CBA"
-        tipo:
-          type: string
-          enum: [CMC, CMJ]
       required:
         - id
         - nombre
         - codigo
-        - tipo
 
     Bolsin:
       type: object
@@ -350,11 +339,12 @@ components:
             2 = No se recibe toda la documentación asociada a los remitos
             3 = Existe documentación que no corresponde al destino
             4 = La documentación se debe redirigir a otra área
-        empleadoId:
+        sesionId:
           type: integer
+          description: ID de la sesión activa del usuario que registra la recepción
       required:
         - opcion
-        - empleadoId
+        - sesionId
 
     RecepcionResponse:
       type: object

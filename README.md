@@ -59,15 +59,15 @@ VITE_API_URL=http://localhost:3000
 ### Requisitos del entorno
 
 - **Backend** Spring Boot corriendo en la URL de `VITE_API_URL` (default: `http://localhost:8080`)
-- **PostgreSQL** en `localhost:5432` (usuario: `postgres`, contraseña: `postgres`)
-- Datos de prueba en `Grupo8-back/sql/seed-data.sql`
+- **PostgreSQL** en `localhost:5434` (usuario: `postgres`, contraseña: `postgres`)
+- Datos de prueba en `Grupo8-back/schema.sql`
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `POST` | `/api/usuarios/login` | Login con `{nombreUsuario, contrasenia}` |
 | `GET` | `/api/usuarios/{id}` | Datos del usuario |
 | `GET` | `/api/comisiones` | Listar comisiones médicas |
-| `GET` | `/api/bolsines?cmDestino=X` | Bolsines pendientes en CM destino |
+| `GET` | `/api/bolsines?sesionId=X` | Bolsines pendientes para la CM del usuario (opcionales: `nroPrecinto`, `cmOrigenId`) |
 | `GET` | `/api/bolsines/{id}` | Detalle de un bolsín con remitos y documentación |
 | `PUT` | `/api/bolsines/{id}/recepcion` | Registrar recepción de bolsín |
 
